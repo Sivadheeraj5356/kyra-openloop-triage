@@ -102,3 +102,99 @@ class ExtractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdversarialTests(unittest.TestCase):
+    def test_quoted_promise_in_my_message_is_not_mine(self):
+        # I quote THEIR words; the promise must not be attributed to me.
+        threads = make([{"id": "t1", "title": "catering", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "me",
+                'You said "I\'ll handle the catering" - glad we agree.'),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_quoted_promise_in_their_message_creates_no_promise_loop(self):
+        threads = make([{"id": "t1", "title": "files", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "priya",
+                'Per your "I will send the files" note, please send them.'),
+        ]}])
+        loops = extract_loops(threads, me="me")
+        self.assertEqual([l.kind for l in loops], ["reply_owed"])
+
+    def test_negated_promise_is_not_a_commitment(self):
+        threads = make([{"id": "t1", "title": "report", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "me",
+                "I don't think I'll have the report by Friday."),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_negated_promise_variant(self):
+        threads = make([{"id": "t1", "title": "numbers", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "me",
+                "I'm not sure I can get you the numbers by Friday, sorry."),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_same_message_completion_closes_promise(self):
+        threads = make([{"id": "t1", "title": "draft", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "me",
+                "I'll send the full report by Friday; attached is the draft."),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_no_reply_needed_suppresses_loop(self):
+        threads = make([{"id": "t1", "title": "fyi", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "lina",
+                "Can you glance at the deck sometime? No need to reply, just FYI."),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_self_resolved_request_is_closed(self):
+        threads = make([{"id": "t1", "title": "deck", "messages": [
+            msg("m1", "2026-10-14T09:00:00", "priya", "Can you send the deck?"),
+            msg("m2", "2026-10-14T09:20:00", "priya", "Never mind, found it."),
+        ]}])
+        self.assertEqual(extract_loops(threads, me="me"), [])
+
+    def test_stale_only_with_as_of_anchor(self):
+        threads = make([{"id": "t1", "title": "old ask", "messages": [
+            msg("m1", "2026-09-01T09:00:00", "priya",
+                "Can you review the plan before Monday?"),
+        ]}])
+        from datetime import datetime
+        anchored = extract_loops(threads, me="me",
+                                 as_of=datetime(2026, 10, 17, 16, 0, 0))
+        self.assertEqual(len(anchored), 1)
+        self.assertTrue(anchored[0].stale)
+        self.assertIsNone(anchored[0].deadline)
+        from openloop.classify import classify, CAN_WAIT
+        self.assertEqual(classify(anchored[0]), CAN_WAIT)
+        # without an anchor, no staleness is claimed
+        unanchored = extract_loops(threads, me="me")
+        self.assertFalse(unanchored[0].stale)
+        self.assertIsNotNone(unanchored[0].deadline)
+
+    def test_fresh_loop_not_marked_stale(self):
+        threads = make([{"id": "t1", "title": "new ask", "messages": [
+            msg("m1", "2026-10-16T09:00:00", "priya", "Can you send the deck?"),
+        ]}])
+        from datetime import datetime
+        loops = extract_loops(threads, me="me",
+                              as_of=datetime(2026, 10, 17, 16, 0, 0))
+        self.assertFalse(loops[0].stale)
+
+    def test_completion_in_another_thread_is_a_known_miss(self):
+        # DOCUMENTED LIMIT: delivery in a different thread does not close the
+        # promise; threads are analyzed independently.
+        threads = make([
+            {"id": "t1", "title": "contract", "messages": [
+                msg("m1", "2026-10-14T09:00:00", "me",
+                    "I'll send the contract by Friday."),
+            ]},
+            {"id": "t2", "title": "unrelated", "messages": [
+                msg("m2", "2026-10-15T09:00:00", "me",
+                    "Attached is the contract, as promised."),
+            ]},
+        ])
+        loops = extract_loops(threads, me="me")
+        self.assertEqual([l.kind for l in loops], ["promise_made"])
