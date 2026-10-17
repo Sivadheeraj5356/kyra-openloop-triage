@@ -32,3 +32,5 @@ class OpenLoop:
     detail: str          # human-readable reason this loop is open
     deadline: Optional[str] = None   # extracted deadline phrase, if any
     urgency: str = "normal"          # high | normal
+    triggered_ts: str = ""           # ts of the message that opened the loop
+    stale: bool = False              # set only when an --as-of anchor was given
