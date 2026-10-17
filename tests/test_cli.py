@@ -55,3 +55,14 @@ class CliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_invalid_as_of_exit_two(self):
+        with redirect_stderr(io.StringIO()):
+            code = main([FIXTURE, "--me", "me", "--as-of", "next fridayish"])
+        self.assertEqual(code, 2)
+
+    def test_as_of_anchor_accepted(self):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = main([FIXTURE, "--me", "me", "--as-of", "2026-10-17T16:00:00"])
+        self.assertEqual(code, 0)
