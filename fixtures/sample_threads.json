@@ -1,0 +1,66 @@
+{
+  "threads": [
+    {
+      "id": "t1",
+      "title": "Q3 budget sign-off",
+      "messages": [
+        {"id": "m1", "ts": "2026-10-14T09:12:00", "sender": "priya", "body": "Can you review the Q3 budget numbers before Thursday? Finance is waiting on your sign-off."}
+      ]
+    },
+    {
+      "id": "t2",
+      "title": "Vendor contract draft",
+      "messages": [
+        {"id": "m2", "ts": "2026-10-13T15:02:00", "sender": "me", "body": "I'll send the redlined contract by Friday."},
+        {"id": "m3", "ts": "2026-10-15T10:41:00", "sender": "arjun", "body": "Any update on the contract? Legal is asking."}
+      ]
+    },
+    {
+      "id": "t3",
+      "title": "Coffee next week?",
+      "messages": [
+        {"id": "m4", "ts": "2026-10-12T11:00:00", "sender": "ravi", "body": "Want to grab coffee next week? Tuesday or Wednesday afternoon works for me."},
+        {"id": "m5", "ts": "2026-10-12T11:20:00", "sender": "me", "body": "Wednesday works better. How about 3pm?"},
+        {"id": "m6", "ts": "2026-10-12T11:35:00", "sender": "ravi", "body": "3pm Wednesday is tight, could do 4pm. Does that work?"}
+      ]
+    },
+    {
+      "id": "t4",
+      "title": "Weekly product newsletter",
+      "messages": [
+        {"id": "m7", "ts": "2026-10-14T08:00:00", "sender": "newsletter@productweekly.example", "body": "This week in product: five frameworks you need. Unsubscribe | View in browser."}
+      ]
+    },
+    {
+      "id": "t5",
+      "title": "Server costs spike",
+      "messages": [
+        {"id": "m8", "ts": "2026-10-15T07:55:00", "sender": "devon", "body": "Our cloud bill doubled overnight. URGENT: can you check the autoscaler config today? This is blocking the deploy."}
+      ]
+    },
+    {
+      "id": "t6",
+      "title": "Re: design feedback",
+      "messages": [
+        {"id": "m9", "ts": "2026-10-13T14:00:00", "sender": "lina", "body": "What do you think of the new onboarding mockups?"},
+        {"id": "m10", "ts": "2026-10-13T16:30:00", "sender": "me", "body": "Left comments in the file - overall looks great, two nits on the empty state."}
+      ]
+    },
+    {
+      "id": "t7",
+      "title": "Intern referral",
+      "messages": [
+        {"id": "m11", "ts": "2026-10-14T18:22:00", "sender": "me", "body": "I'll check with the team and get back to you next week."}
+      ]
+    },
+    {
+      "id": "t8",
+      "title": "Dinner plan",
+      "messages": [
+        {"id": "m12", "ts": "2026-10-14T19:00:00", "sender": "ravi", "body": "Dinner Friday? 8pm at the usual place."},
+        {"id": "m13", "ts": "2026-10-14T19:05:00", "sender": "me", "body": "How about 8:30 instead?"},
+        {"id": "m14", "ts": "2026-10-14T19:07:00", "sender": "ravi", "body": "Confirmed, 8:30. See you then!"}
+      ]
+    }
+  ]
+}
