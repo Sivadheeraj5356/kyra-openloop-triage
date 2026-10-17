@@ -30,6 +30,20 @@ opened - no black box.
 - **Heuristics, not an LLM.** Rules are regex/string patterns over message
   text. They are transparent and testable, and they will misjudge messages
   whose meaning depends on context the patterns don't capture.
+- **Deadline phrases are extracted, not resolved.** "by Friday" is reported
+  verbatim. The tool does not compute calendar dates or overdue status -
+  there is no honest "now" inside an offline export. Staleness is only
+  marked when the caller supplies an anchor: `--as-of 2026-10-17T16:00:00`
+  flags loops whose triggering message is over 14 days older than the
+  anchor, drops the unresolved deadline phrase, and moves the loop to
+  `can_wait`. Without `--as-of`, no stale or overdue claim is made.
+- **Threads are independent.** A delivery sent in a *different* thread does
+  not close the promise made in this one (tested as a known miss in
+  `tests/test_extract.py::AdversarialTests`).
+- **Speaker attribution is shallow.** Double-quoted spans are stripped
+  before promise detection so quoted speech isn't read as the speaker's,
+  and sentence-level negation ("won't", "not sure", "can't") suppresses a
+  promise. Indirect speech and single-quoted spans can still fool it.
 - **Synthetic fixtures only.** `fixtures/sample_threads.json` is invented
   sample data. No real mailbox, no private messages, no third-party code.
 - **No integrations.** No email/calendar APIs, no cloud calls, no API keys.
@@ -42,9 +56,11 @@ opened - no black box.
 ```bash
 python3 -m openloop fixtures/sample_threads.json --me me
 python3 -m openloop fixtures/sample_threads.json --me me --json
+python3 -m openloop fixtures/sample_threads.json --me me --as-of 2026-10-17T16:00:00
 ```
 
-Exit codes: `0` = brief rendered, `2` = export malformed or unreadable.
+Exit codes: `0` = brief rendered, `2` = export malformed, unreadable, or a
+bad `--as-of` timestamp.
 
 Input format (`--me` is your sender handle as it appears in the export):
 
@@ -85,13 +101,16 @@ Python 3.9+, standard library only. Tests use `unittest` style, so they run
 under either runner:
 
 ```bash
-python3 -m unittest discover -s tests        # 28 tests
+python3 -m unittest discover -s tests        # 38 tests
 python3 -m pytest tests                      # if pytest is installed
 ```
 
 Tests cover parsing validation (including malformed-input failure cases),
-each extraction rule and its negative case, classification and ordering, and
-CLI exit codes.
+each extraction rule and its negative case, adversarial cases (quoted vs
+speaker promises, negated promises, same-message completion, no-reply-needed
+suppression, self-resolved requests, anchored staleness, and the documented
+cross-thread completion miss), classification and ordering, and CLI exit
+codes.
 
 ## Layout
 
@@ -104,5 +123,5 @@ openloop/
   brief.py      text brief rendering
   cli.py        argument handling, exit codes
 fixtures/       synthetic sample export
-tests/          28 unittest-style tests
+tests/          38 unittest-style tests
 ```
