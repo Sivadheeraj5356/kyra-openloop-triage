@@ -27,6 +27,10 @@ def main(argv=None) -> int:
                     help="your sender handle as it appears in the export")
     ap.add_argument("--json", action="store_true",
                     help="emit machine-readable JSON instead of the text brief")
+    ap.add_argument("--as-of", default=None, metavar="ISO-TIMESTAMP",
+                    help="anchor 'now' for staleness marking (e.g. "
+                         "2026-10-17T16:00:00). Without it, no stale/overdue "
+                         "claims are made.")
     args = ap.parse_args(argv)
 
     try:
@@ -35,7 +39,16 @@ def main(argv=None) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    loops = extract_loops(threads, me=args.me)
+    as_of = None
+    if args.as_of:
+        from datetime import datetime
+        try:
+            as_of = datetime.fromisoformat(args.as_of)
+        except ValueError:
+            print(f"error: --as-of is not valid ISO-8601: {args.as_of!r}",
+                  file=sys.stderr)
+            return 2
+    loops = extract_loops(threads, me=args.me, as_of=as_of)
     pairs = triage(loops)
 
     if args.json:
@@ -47,6 +60,7 @@ def main(argv=None) -> int:
                 "kind": loop.kind,
                 "bucket": bucket,
                 "deadline": loop.deadline,
+                "stale": loop.stale,
                 "why": loop.detail,
             }
             for loop, bucket in pairs
